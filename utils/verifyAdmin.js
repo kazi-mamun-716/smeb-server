@@ -1,17 +1,20 @@
-const jwt = require("jsonwebtoken");
-const User = require("../model/userModel");
+const Admin = require("../model/adminModel");
 
-module.exports = (req, res, next) => {
-  const authToken = req.headers.authorization.split(" ")[1];
-  jwt.verify(authToken, process.env.SECRET, async (err, decoded) => {
-    if (err) {
+module.exports = async (req, res, next) => {
+  try {
+    const { email } = req.user;
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
       res.status(403).json({
-        message: "Forbidden Access",
+        message: "Admin Access Only",
       });
     } else {
-      const { id } = decoded;
-      const user = await User.findById(id);
       next();
     }
-  });
+  } catch (err) {
+    console.log(err);
+    res.status(403).json({
+      message: "Forbidden Access",
+    });
+  }
 };

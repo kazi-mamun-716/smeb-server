@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
-    },
+    }, 
     email: {
         type: String,
         required: true,
@@ -16,13 +16,14 @@ const userSchema = new mongoose.Schema({
     },
     gender:{
         type: String,
-        required: true,
-    },
+    },    
     mobile:{
         type: String,
-        required: true
     },
-    photo: String,
+    photo: {
+      type: String,
+      default: "",
+    },
     password: {
         type: String,
         required: true,
@@ -31,7 +32,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         default: "member",
-        enum: ["member", "life time member", "general secretary", "admin", "admin secretary", "president"]
+        // enum: ["member", "life time member", "general secretary", "admin", "admin secretary", "president"]
     },
     whatsapp: String,
     telegram: String,
@@ -40,14 +41,17 @@ const userSchema = new mongoose.Schema({
         default: "admin secretary",
         enum: ["admin secretary", "general secretary", "president", "active"]
     },
-    agreeWithCondition: {
-        type: Boolean,
-        required: true,
-        default: true
-    },
     emailVerified:{
         type: Boolean,
         default: false
+    },
+    personalInfo:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Personal"
+    },
+    academicInfo:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Academic"
     },
     payments:[{
         type: mongoose.Schema.Types.ObjectId,
@@ -61,6 +65,14 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Forum"
     }],
+    ageConfirmation: {
+      type: String,
+      default: "",
+    },
+    courseConfirmation: {
+      type: String,
+      default: "",
+    },
 },{
     timestamps: true
 });

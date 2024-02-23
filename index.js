@@ -4,9 +4,11 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
-app.use(express.urlencoded({extended: true}));
 app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+app.use(cors());
+//for share uploading file
+app.use('/assets', express.static('assets'));
 
 const port = process.env.PORT || 4000;
 
@@ -14,6 +16,8 @@ const port = process.env.PORT || 4000;
 app.use('/api/auth', require("./routes/authRoute"));
 app.use('/api/user', require('./routes/userRoute'));
 app.use('/api/forum', require('./routes/forumRoute'));
+app.use('/api/basic', require('./routes/basicRoute'));
+app.use('/api/admin', require('./routes/adminRoute'));
 
 app.get("/", (req, res)=>{
     res.send('smeb backend is running successfully')

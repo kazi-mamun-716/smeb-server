@@ -4,9 +4,7 @@ const verifyToken = require("../utils/verifyToken");
 
 router.post('/login', authController.login);
 router.post('/register', authController.register);
-router.post('/addMember', authController.addUser);
-router.get("/members", authController.getAllUser);
-router.put("/approveMember", verifyToken, authController.approveUser)
+router.get("/countMember", verifyToken, authController.countUser);
 router.route('/:id')
     .get()
     .put(authController.updateUser)
