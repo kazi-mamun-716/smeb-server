@@ -16,8 +16,12 @@ const forumSchema = new mongoose.Schema({
     comments: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Comment"
-    }]
-});
+    }],
+    lastComment: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comment"
+    }
+},{timestamps: true});
 
 const Forum = mongoose.model("Forum", forumSchema);
 module.exports = Forum;

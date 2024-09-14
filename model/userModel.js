@@ -30,16 +30,16 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        required: true,
-        default: "member",
-        // enum: ["member", "life time member", "general secretary", "admin", "admin secretary", "president"]
+    },
+    membership: {
+        type: String,
+        enum: ["member", "life time member"]
     },
     whatsapp: String,
     telegram: String,
     status: {
         type: String,
         default: "admin secretary",
-        enum: ["admin secretary", "general secretary", "president", "active"]
     },
     emailVerified:{
         type: Boolean,
@@ -53,6 +53,11 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Academic"
     },
+    lastPayment: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Payment"
+    },
+    lastPaymentDate: Date,
     payments:[{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Payment"

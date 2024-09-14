@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const commentSchema = new mongoose.Schema({
-    description: {
+    content: {
         type: String,
         required: true
     },
@@ -13,7 +13,7 @@ const commentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Forum"
     }
-});
+}, {timestamps: true});
 
 const Comment = mongoose.model("Comment", commentSchema);
 module.exports = Comment;

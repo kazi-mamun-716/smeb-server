@@ -6,6 +6,7 @@ const memberApproval = require("../utils/memberApproval");
 const adminNotificationMail = require("../utils/adminNotificationMail");
 const mongoose = require("mongoose");
 const Account = require("../model/accountModel");
+const Fund = require("../model/fundModel");
 
 module.exports = {
   register: async (req, res) => {
@@ -63,7 +64,6 @@ module.exports = {
       const compare = await bcrypt.compare(current, admin.password);
       if (compare) {
         const hashed = await bcrypt.hash(password, 11);
-        console.log(hashed);
         await Admin.findByIdAndUpdate(id, { password: hashed }, { new: true });
         res.status(200).json({ message: "Password Change Successfully!" });
       } else {
@@ -80,42 +80,25 @@ module.exports = {
     const { email } = req.user;
     const admin = await Admin.findOne({ email }).select({
       password: 0,
-      backupPass:0,
+      backupPass: 0,
       __v: 0,
     });
     res.status(200).json(admin);
   },
-  allMember: async (req, res) => {
-    try {
-      const { page, size, filter } = req.query;
-      let users;
-      let newFilter = {};
-      if (filter !== "all") {
-        newFilter = { status: filter };
-      }
-      if (page || size) {
-        users = await User.find(newFilter)
-          .select({
-            password: 0,
-            __v: 0,
-          })
-          .limit(parseInt(size))
-          .skip(parseInt(size) * parseInt(page))
-          .populate("forums", "-author -comments -__v")
-          .populate("academicInfo", "-_id -__v -user")
-          .populate("personalInfo", "-_id -__v -user");
-      } else {
-        users = await User.find(newFilter).select({
-          password: 0,
-          __v: 0,
-        });
-      }
-      res.status(200).json({ users });
-    } catch (err) {
-      console.log(err);
-      res.status(500).json({
-        message: "Internal Server Error!",
+  findMember: async (req, res) => {
+    const { smebId } = req.params;
+    const member = await User.find({ smebId })
+      .select({
+        password: 0,
+        __v: 0,
+      })
+      .populate("academicInfo", "-_id -__v -user");
+    if (!member) {
+      res.status(400).json({
+        message: "Member Not Found!",
       });
+    } else {
+      res.status(200).json({ member });
     }
   },
   approveUser: async (req, res) => {
@@ -164,9 +147,13 @@ module.exports = {
     } else {
       newStatus = "active";
       const lastUser = await User.findOne({}, {}, { sort: { smebId: -1 } });
-      const lastSmebId = lastUser.smebId ? lastUser.smebId : 1000;
+      const lastSmebId = lastUser.smebId ? lastUser.smebId : 1060;
       const smebId = lastSmebId + 1;
-      await User.findByIdAndUpdate(id, { smebId }, { new: true, upsert: true });
+      await User.findByIdAndUpdate(
+        id,
+        { smebId, membership: "member" },
+        { new: true, upsert: true }
+      );
       const text = `
         Hello ${user.name}, congratulation! Your Id are now activated.
     `;
@@ -226,15 +213,32 @@ module.exports = {
       });
     }
   },
-  countUser: async (req, res) => {
-    let newFilter = {};
-    if (req.query.filter !== "all") {
-      newFilter = { status: req.query.filter };
+  changeMembership: async (req, res) => {
+    try {
+      const { id } = req.params;
+      let newMembership;
+      const { membership } = req.body;
+      if (membership === "member") {
+        newMembership = "life time member";
+      } else {
+        newMembership = "member";
+      }
+      await User.findByIdAndUpdate(id, {
+        $set: { membership: newMembership },
+      });
+      res.status(200).json({ message: "Updated Successfully" });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({
+        message: "Internal Server Error!",
+      });
     }
-    const count = await User.countDocuments(newFilter);
-    res.status(200).json({ count });
   },
   //payment request controlling
+  fundDetails: async(req, res)=>{
+    const fund = await Fund.find({});
+    res.status(200).json(fund)
+  },
   allPaymentRequest: async (req, res) => {
     try {
       const { page, size } = req.query;
@@ -269,34 +273,47 @@ module.exports = {
       const { id } = req.params;
       const host = req.get("host");
       const filePath =
-        req.protocol + "://" + host + "/" + req.file.path.replace(/\\/g, "/");
+        "https://" + host + "/" + req.file.path.replace(/\\/g, "/");
       const pending = await Account.findById(id);
-      const lastActiveDocument = await Account.findOne({ status: "accepted" })
-        .sort({ _id: -1 })
-        .limit(1);
-      if (lastActiveDocument) {
-        const amount =
-          pending?.transactionType === "revenue"
-            ? parseInt(lastActiveDocument.presentAmount) +
-              parseInt(pending.amount)
-            : parseInt(lastActiveDocument.presentAmount) -
-              parseInt(pending.amount);
-        await Account.findByIdAndUpdate(
-          id,
-          { status: "accepted", presentAmount: amount },
-          { new: true }
-        );
-      } else {
-        await Account.findByIdAndUpdate(
-          id,
+      let presentAmountUpdate;
+      if(pending?.transactionType === "revenue"){
+        await Fund.findOneAndUpdate(
+          {},
           {
-            status: "accepted",
-            presentAmount: pending.amount,
-            payslip: filePath,
+            $inc: {
+              totalFunds: pending.amount,
+              totalRevenue: pending.amount,
+            },
+          },
+          { new: true }
+        )
+        presentAmountUpdate = { $inc: { presentAmount: pending.amount } };
+      }else{
+        await Fund.findOneAndUpdate(
+          {},
+          {
+            $inc: {
+              totalFunds: -pending.amount,
+              totalExpenses: pending.amount,
+            },
           },
           { new: true }
         );
+        presentAmountUpdate = { $inc: { presentAmount: -pending.amount } };
       }
+      
+      await Account.findByIdAndUpdate(
+        id,
+        { status: "accepted", payslip: filePath, presentAmount: presentAmountUpdate },
+        { new: true }
+      );
+      if(pending?.transactionType === "revenue"){
+        const [month, year] = pending.month.split("-");
+        const lastPaymentDate = new Date(`${year}-${month}-01`);
+        await User.findByIdAndUpdate(pending.member, {
+          $set: { lastPayment: new mongoose.Types.ObjectId(pending._id), lastPaymentDate },
+        });
+      }      
       res.status(202).json({ message: "Payment Status Updated Successfully!" });
     } catch (err) {
       console.log(err);
@@ -387,17 +404,23 @@ module.exports = {
       });
     }
   },
-  allTransactions: async(req, res)=>{
+  allTransactions: async (req, res) => {
     let transactions;
     const { page, size, filter } = req.query;
-    
+
     if (page || size) {
-      transactions = await Account.find({ status: "accepted", transactionType: filter })
+      transactions = await Account.find({
+        status: "accepted",
+        transactionType: filter,
+      })
         .populate("member", "name smebId")
         .limit(parseInt(size))
         .skip(parseInt(size) * parseInt(page));
     } else {
-      transactions = await Account.find({ status: "accepted", transactionType: filter }).populate("member", "name smebId");
+      transactions = await Account.find({
+        status: "accepted",
+        transactionType: filter,
+      }).populate("member", "name smebId");
     }
     if (transactions) {
       res.status(200).json(transactions);
@@ -406,5 +429,36 @@ module.exports = {
         message: "No Transaction Found!",
       });
     }
-  }
+  },
+  createExpenseRequest: async (req, res) => {
+    try {
+      const { id } = req.user;
+      const data = { member: id, ...req.body, transactionType: "expense" };
+      const expense = await Account.create(data);
+      res.status(201).json({
+        message: "Expense Request Created Successfully!",
+        expense,
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({
+        message: "Internal Server Error!",
+      });
+    }
+  },
+  expenseRequestByUser: async (req, res) => {
+    try {
+      const { id } = req.user;
+      const expenses = await Account.find({
+        member: new mongoose.Types.ObjectId(id),
+        transactionType: "expense",
+      });
+      res.status(200).json({ expenses });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({
+        message: "Internal Server Error!",
+      });
+    }
+  },
 };

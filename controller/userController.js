@@ -24,6 +24,30 @@ module.exports = {
       .populate("personalInfo", "-_id -__v -user");
     res.status(200).json(user);
   },
+  userById: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const member = await User.findOne({ _id: id })
+        .select({
+          password: 0,
+          __v: 0,
+        })
+        .populate("academicInfo", "-_id -__v -user")
+        .populate("personalInfo", "-_id -__v -user");
+      if (!member) {
+        res.status(400).json({
+          message: "Member Not Found!",
+        });
+      } else {
+        res.status(200).json({ member });
+      }
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({
+        message: "Server Side Error!",
+      });
+    }
+  },
   uploadDocument: async (req, res) => {
     if (!req.files) {
       console.log("No file received");
@@ -35,8 +59,7 @@ module.exports = {
         const host = req.get("host");
         for (let file in req.files) {
           const filePath =
-            req.protocol +
-            "://" +
+            "https://" +
             host +
             "/" +
             req.files[file][0].path.replace(/\\/g, "/");
@@ -127,24 +150,24 @@ module.exports = {
       res.status(400).json({ message: "User Not Found" });
     }
   },
-  changePassword: async(req, res)=>{
-    try{
-      const {id} = req.user;
-      const {current, password} = req.body;
+  changePassword: async (req, res) => {
+    try {
+      const { id } = req.user;
+      const { current, password } = req.body;
       const user = await User.findById(id);
       const matched = await bcrypt.compare(current, user.password);
-      if(!matched){
+      if (!matched) {
         return res.status(400).json({
-          message: "Password Not Matched!"
-        })
-      }else{
+          message: "Password Not Matched!",
+        });
+      } else {
         const hashed = await bcrypt.hash(password, 11);
-        await User.findByIdAndUpdate(id, {password: hashed});
+        await User.findByIdAndUpdate(id, { password: hashed });
         res.status(200).json({
-          message: "Password Changed Successfully!"
-        })
+          message: "Password Changed Successfully!",
+        });
       }
-    }catch(err){
+    } catch (err) {
       console.log(err);
       res.status(500).json({
         message: "Internal Server Error!",

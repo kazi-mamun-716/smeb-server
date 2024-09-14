@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require('mongoose');
+const cronController = require("./lib/userStatusDependOnPayment");
 require('dotenv').config();
 
 const app = express();
@@ -18,6 +19,9 @@ app.use('/api/user', require('./routes/userRoute'));
 app.use('/api/forum', require('./routes/forumRoute'));
 app.use('/api/basic', require('./routes/basicRoute'));
 app.use('/api/admin', require('./routes/adminRoute'));
+
+//for update user status using payment date via corn
+// cronController();
 
 app.get("/", (req, res)=>{
     res.send('smeb backend is running successfully')

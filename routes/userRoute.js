@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const { allMember, countUser } = require("../controller/commonController");
 const {
   loggedInUser,
   emailVerificationCode,
@@ -10,11 +11,15 @@ const {
   myPayments,
   deletePayment,
   changePassword,
+  userById,
 } = require("../controller/userController");
 const upload = require("../lib/multerData");
 const verifyToken = require("../utils/verifyToken");
 
 router.get("/loggedInUser", verifyToken, loggedInUser);
+router.get("/singleUser/:id", userById);
+router.get("/members", verifyToken, allMember);
+router.get("/count", countUser);
 router.put(
   "/uploadDoc",
   verifyToken,
