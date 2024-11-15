@@ -48,7 +48,7 @@ module.exports = {
       });
     }
     const jwtToken = jwt.sign(
-      { id: user._id, name: user.name, email },
+      { id: user._id, name: user.name, email, userId: user?.userId },
       process.env.SECRET
     );
     res.status(200).json({

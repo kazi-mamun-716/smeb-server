@@ -19,12 +19,25 @@ const eventSchema = new mongoose.Schema({
        type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     }],
+    nonRegisterd: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    isPaymentAccept: {
+        type: Boolean,
+        required: true
+    },
+    amount: Number,
+    reference: String,
     totalCollection: Number,
     validity: {
         type: Date,
-        required: true
     },
-    publish: Boolean
+    published: {
+        type: Boolean,
+        default: true
+    }
 },{timestamps: true});
 
 const Event = mongoose.model("Event", eventSchema);

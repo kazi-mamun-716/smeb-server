@@ -5,6 +5,8 @@ const verifyToken = require("../utils/verifyToken");
 router.post("/create", verifyToken, forumController.createForum );
 router.get("/all", forumController.GetForum);
 router.get("/getForumByUser", verifyToken, forumController.getForumByUser);
+router.get('/count', forumController.getForumCount);
+router.get('/commentCount', forumController.getCommentCount);
 router.route("/:id")
     .get(forumController.singleForum)
     .put(verifyToken, forumController.editForum)

@@ -20,6 +20,11 @@ const forumSchema = new mongoose.Schema({
     lastComment: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Comment"
+    },
+    status:{
+        type: String,
+        enum: ['pending', 'published'],
+        default: "pending",
     }
 },{timestamps: true});
 

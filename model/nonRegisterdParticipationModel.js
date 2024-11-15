@@ -6,12 +6,15 @@ const eventParticipateSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Event"
     },
-    user:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
-    },
     payment: Number,
     paymentInfo: String,
+    name: String,
+    email: String,
+    mobile: String,
+    course: String,
+    intake: String,
+    institute: String,
+    isMarinner: Boolean,
     status: {
         type: String,
         enum: ["pending", "approved"],
@@ -21,5 +24,5 @@ const eventParticipateSchema = new mongoose.Schema({
     comment: String
 });
 
-const EventParticipate = mongoose.model('EventParticipate', eventParticipateSchema);
-module.exports = EventParticipate;
+const NonRegisterdEventParticipate = mongoose.model('NonRegisterdEventParticipate', eventParticipateSchema);
+module.exports = NonRegisterdEventParticipate;

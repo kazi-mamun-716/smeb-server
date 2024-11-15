@@ -19,6 +19,10 @@ const adminSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    userId:{
+      type: mongoose.Types.ObjectId,
+      ref: 'User'
+    }
   },
   {
     timestamps: false,

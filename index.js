@@ -19,6 +19,7 @@ app.use('/api/user', require('./routes/userRoute'));
 app.use('/api/forum', require('./routes/forumRoute'));
 app.use('/api/basic', require('./routes/basicRoute'));
 app.use('/api/admin', require('./routes/adminRoute'));
+app.use('/api/event', require('./routes/eventRoute'));
 
 //for update user status using payment date via corn
 // cronController();
