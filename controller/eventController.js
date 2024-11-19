@@ -20,11 +20,17 @@ const createEvent = async (req, res) => {
 
 const editEvent = async (req, res) => {
   const id = req.params.id;
-  console.log(req.body);
+  const updateData = {...req.body}
+  if (req.body.validity) {
+    const validityDate = new Date(req.body.validity);
+    if (validityDate > new Date()) {
+      updateData.published = true; // Set published to true if validity is in the future
+    }
+  }
   await Event.findByIdAndUpdate(
     id,
     {
-      $set: { ...req.body },
+      $set: updateData,
     },
     { new: true }
   );
@@ -198,7 +204,6 @@ const getParticipatesByEventId = async (req, res) => {
 
 const nonRegisterdParticipate = async (req, res) => {
   const { eventId } = req.params;
-  console.log(req.body);
   try {
     const exists = await NonRegisterdEventParticipate.findOne({
       event: new mongoose.Types.ObjectId(eventId),
@@ -260,6 +265,31 @@ const nonRegisterdParticipateChecking = async (req, res) => {
   }
 };
 
+//auto off publicity of event
+const updatePublishedStatus = async () => {
+  try {
+    const now = new Date();
+
+    // Find all events where validity date has passed but still published
+    const eventsToUpdate = await Event.find({
+      validity: { $lt: now },
+      published: true,
+    });
+
+    // Update each event
+    for (let event of eventsToUpdate) {
+      event.published = false;
+      await event.save();
+    }
+
+    console.log('Published status updated for expired events.');
+  } catch (error) {
+    console.error('Error updating published status:', error);
+  }
+};
+
+
+
 module.exports = {
   createEvent,
   editEvent,
@@ -275,5 +305,6 @@ module.exports = {
   nonRegisterdParticipate,
   getNonregisterdParticipatesByEventId,
   nonRegisterParticipateCount,
-  nonRegisterdParticipateChecking
+  nonRegisterdParticipateChecking,
+  updatePublishedStatus, //update event publishing status
 };

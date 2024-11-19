@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require('mongoose');
 const cronController = require("./lib/userStatusDependOnPayment");
+const cron = require('node-cron');
+const { updatePublishedStatus } = require("./controller/eventController");
 require('dotenv').config();
 
 const app = express();
@@ -23,6 +25,9 @@ app.use('/api/event', require('./routes/eventRoute'));
 
 //for update user status using payment date via corn
 // cronController();
+
+//update event status using corn
+cron.schedule('0 0 * * *', updatePublishedStatus)
 
 app.get("/", (req, res)=>{
     res.send('smeb backend is running successfully')
