@@ -17,6 +17,8 @@ const {
   findMember,
   changeMembership,
   fundDetails,
+  addCecMember,
+  searchMemberForCec,
 } = require("../controller/adminController");
 const { allMember, memberById, countUser } = require("../controller/commonController");
 const upload = require("../lib/multerData");
@@ -36,6 +38,10 @@ router.put("/membership/:id", verifyToken, verifyAdmin, changeMembership);
 router.get("/count", verifyToken, verifyAdmin, countUser);
 router.put("/forgotPass", verifyToken, forgotAdminPassword);
 router.put("/resetPass", resetAdminPassword);
+
+//cec area
+router.post('/searchMemberForCec', verifyToken, verifyAdmin, searchMemberForCec);
+router.post('/cec', verifyToken, verifyAdmin, addCecMember)
 
 //payment related route
 router.get("/fund", verifyToken, verifyAdmin, fundDetails);

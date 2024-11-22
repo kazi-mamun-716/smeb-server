@@ -234,6 +234,36 @@ module.exports = {
       });
     }
   },
+  //cec area
+  searchMemberForCec: async(req, res)=>{
+    const {data} = req.body;
+    try {
+      let query;
+
+    if (isNaN(data)) {
+      // If `data` is not a valid number, search by name only
+      query = { name: { $regex: data, $options: 'i' } };
+    } else {
+      // If `data` is a valid number, search by smebId or name
+      query = {
+        $or: [
+          { smebId: Number(data) }, // Exact match for smebId
+          { name: { $regex: data, $options: 'i' } } // Partial match for name
+        ]
+      };
+    }
+      const users = await User.find(query);
+  
+      res.status(200).json(users);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Server error" });
+    }
+  },
+  addCecMember: async(req, res)=>{
+    console.log(req.body)
+    res.send("working")
+  },
   //payment request controlling
   fundDetails: async(req, res)=>{
     const fund = await Fund.find({});
