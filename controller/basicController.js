@@ -1,4 +1,5 @@
 const Academi = require("../model/academiModel");
+const Cec = require("../model/cecModel");
 
 module.exports = {
   allAcademi: async (req, res) => {
@@ -24,4 +25,13 @@ module.exports = {
       res.status(500).json("Internal Server Error!");
     }
   },
+  getCec: async(req, res)=>{
+    try{
+      const data = await Cec.find({}).populate('users.user_id', 'name photo')
+      res.status(200).json(data)
+    }catch(err){
+      console.log(err);
+      res.status(500).json("Internal Server Error!");
+    }
+  }
 };

@@ -7,6 +7,7 @@ const adminNotificationMail = require("../utils/adminNotificationMail");
 const mongoose = require("mongoose");
 const Account = require("../model/accountModel");
 const Fund = require("../model/fundModel");
+const Cec = require("../model/cecModel");
 
 module.exports = {
   register: async (req, res) => {
@@ -235,39 +236,54 @@ module.exports = {
     }
   },
   //cec area
-  searchMemberForCec: async(req, res)=>{
-    const {data} = req.body;
+  searchMemberForCec: async (req, res) => {
+    const { data, membersId } = req.body;
     try {
       let query;
 
-    if (isNaN(data)) {
-      // If `data` is not a valid number, search by name only
-      query = { name: { $regex: data, $options: 'i' } };
-    } else {
-      // If `data` is a valid number, search by smebId or name
-      query = {
-        $or: [
-          { smebId: Number(data) }, // Exact match for smebId
-          { name: { $regex: data, $options: 'i' } } // Partial match for name
-        ]
-      };
-    }
+      if (isNaN(data)) {
+        // If `data` is not a valid number, search by name only
+        query = {
+          _id: { $nin: membersId },
+          status: "active",
+          name: { $regex: data, $options: "i" },
+        };
+      } else {
+        // If `data` is a valid number, search by smebId or name
+        query = {
+          _id: { $nin: membersId },
+          status: "active",
+          $or: [
+            { smebId: Number(data) }, // Exact match for smebId
+            { name: { $regex: data, $options: "i" } }, // Partial match for name
+          ],
+        };
+      }
       const users = await User.find(query);
-  
+
       res.status(200).json(users);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Server error" });
     }
   },
-  addCecMember: async(req, res)=>{
-    console.log(req.body)
+  addCecMember: async (req, res) => {
+    try {
+      await Cec.create(req.body)
+      res.status(201).json({message: 'cec pannel successfully posted'})
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({message: 'Internal Server Error!'})
+    }
+  },
+  updateCecMember: async(req, res)=>{
+    const {id} = req.query;
     res.send("working")
   },
   //payment request controlling
-  fundDetails: async(req, res)=>{
+  fundDetails: async (req, res) => {
     const fund = await Fund.find({});
-    res.status(200).json(fund)
+    res.status(200).json(fund);
   },
   allPaymentRequest: async (req, res) => {
     try {
@@ -306,7 +322,7 @@ module.exports = {
         "https://" + host + "/" + req.file.path.replace(/\\/g, "/");
       const pending = await Account.findById(id);
       let presentAmountUpdate;
-      if(pending?.transactionType === "revenue"){
+      if (pending?.transactionType === "revenue") {
         await Fund.findOneAndUpdate(
           {},
           {
@@ -316,9 +332,9 @@ module.exports = {
             },
           },
           { new: true }
-        )
+        );
         presentAmountUpdate = { $inc: { presentAmount: pending.amount } };
-      }else{
+      } else {
         await Fund.findOneAndUpdate(
           {},
           {
@@ -331,19 +347,26 @@ module.exports = {
         );
         presentAmountUpdate = { $inc: { presentAmount: -pending.amount } };
       }
-      
+
       await Account.findByIdAndUpdate(
         id,
-        { status: "accepted", payslip: filePath, presentAmount: presentAmountUpdate },
+        {
+          status: "accepted",
+          payslip: filePath,
+          presentAmount: presentAmountUpdate,
+        },
         { new: true }
       );
-      if(pending?.transactionType === "revenue"){
+      if (pending?.transactionType === "revenue") {
         const [month, year] = pending.month.split("-");
         const lastPaymentDate = new Date(`${year}-${month}-01`);
         await User.findByIdAndUpdate(pending.member, {
-          $set: { lastPayment: new mongoose.Types.ObjectId(pending._id), lastPaymentDate },
+          $set: {
+            lastPayment: new mongoose.Types.ObjectId(pending._id),
+            lastPaymentDate,
+          },
         });
-      }      
+      }
       res.status(202).json({ message: "Payment Status Updated Successfully!" });
     } catch (err) {
       console.log(err);

@@ -5,19 +5,26 @@ const cecSchema = new mongoose.Schema(
     batch: {
       type: Number,
       required: true,
+      unique: true,
     },
-    members: [{
-      type: mongoose.Types.ObjectId,
-      ref: 'User'
-    }],
-    starting: {
-      type: String,
+    users: [
+      {
+        user_id: {
+          type: mongoose.Types.ObjectId,
+          ref: "User",
+        },
+        cecRole: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+    startMonth: {
+      type: Date,
       required: true,
     },
-    expired: {
-      type: String,
-      required: true,
-    },
+    endMonth: Date,
+    isRunning: Boolean,
   },
   {
     timestamps: true,
