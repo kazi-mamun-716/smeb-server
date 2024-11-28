@@ -269,16 +269,31 @@ module.exports = {
   },
   addCecMember: async (req, res) => {
     try {
-      await Cec.create(req.body)
-      res.status(201).json({message: 'cec pannel successfully posted'})
+      await Cec.create(req.body);
+      res.status(201).json({ message: "cec pannel successfully posted" });
     } catch (error) {
-      console.log(error)
-      res.status(500).json({message: 'Internal Server Error!'})
+      console.log(error);
+      res.status(500).json({ message: "Internal Server Error!" });
     }
   },
-  updateCecMember: async(req, res)=>{
-    const {id} = req.query;
-    res.send("working")
+  getCecMemberById: async (req, res) => {
+    try {
+      const { id } = req.query;
+      const cecPanel = await Cec.findById(id).populate('users.user_id', 'name photo')
+      res.status(200).json(cecPanel);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Internal Server Error!" });
+    }
+  },
+  updateCecMember: async (req, res) => {
+    try {
+      const { id } = req.query;
+      res.send("working");
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Internal Server Error!" });
+    }
   },
   //payment request controlling
   fundDetails: async (req, res) => {

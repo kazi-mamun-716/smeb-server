@@ -20,6 +20,7 @@ const {
   addCecMember,
   searchMemberForCec,
   updateCecMember,
+  getCecMemberById,
 } = require("../controller/adminController");
 const { allMember, memberById, countUser } = require("../controller/commonController");
 const upload = require("../lib/multerData");
@@ -43,6 +44,7 @@ router.put("/resetPass", resetAdminPassword);
 //cec area
 router.post('/searchMemberForCec', verifyToken, verifyAdmin, searchMemberForCec);
 router.route('/cec')
+  .get(verifyToken, verifyAdmin, getCecMemberById)
   .post(verifyToken, verifyAdmin, addCecMember)
   .put(verifyToken, verifyAdmin, updateCecMember)
 
