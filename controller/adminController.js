@@ -289,7 +289,9 @@ module.exports = {
   updateCecMember: async (req, res) => {
     try {
       const { id } = req.query;
-      res.send("working");
+      const data = await Cec.findByIdAndUpdate(id, req.body, {new: true})
+      console.log(id, data)
+      res.status(200).json({message: 'Updated Successfully!'})
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Internal Server Error!" });
